@@ -2,6 +2,7 @@ import locale
 import socket
 import time
 import hashlib
+from fpdf import FPDF
 
 from env_config import BUFFER, HEADER_SIZE, CHECK_SUM_SIZE, HOST, PORT
 
@@ -65,6 +66,25 @@ def recieve_message(udp_socket: socket.socket) -> tuple[list[str], int]:
     return received_data, tamanho_total_dados
 
 
+def create_pdf(tamanho_total_dados: int, expected_packages: int, received_data: int, execution_time: float):
+    pdf = FPDF()
+
+    pdf.add_page()
+    pdf.set_font("Arial", size=15)
+
+    pdf.cell(200, 10, txt="="*50, align='C', ln=1)
+    pdf.cell(200, 10, txt=f"{'Relatório':^50}", align='C', ln=2)
+    pdf.cell(200, 10, txt="="*50, align='C', ln=3)
+    pdf.cell(200, 10, txt=f"Tamanho do arquivo: {locale.format_string('%.0f', tamanho_total_dados, grouping=True)} bytes", align='C', ln=4)
+    pdf.cell(200, 10, txt=f"Número de pacores enviados: {expected_packages}", align='C', ln=5)
+    pdf.cell(200, 10, txt=f"Número de arquivos recebidos: {received_data}", align='C', ln=6)
+    pdf.cell(200, 10, txt=f"Número de arquivos perdidos: {expected_packages - received_data}", align='C', ln=7)
+    pdf.cell(200, 10, txt=f"Velocidade de transmissão: {locale.format_string('%.4f', tamanho_total_dados * 8 / execution_time, grouping=True)} bit/s", align='C', ln=8)
+    pdf.cell(200, 10, txt="="*50, align='C', ln=9)
+
+    pdf.output("relatorio.pdf")
+
+
 if __name__ == "__main__":
     host = HOST
     target_port = PORT
@@ -90,3 +110,5 @@ if __name__ == "__main__":
     print(f"Número de arquivos perdidos: {expected_packages - len(received_data)}")
     print(f"Velocidade de transmissão: {locale.format_string('%.4f', tamanho_total_dados * 8 / execution_time, grouping=True)} bit/s")
     print("="*50)
+
+    create_pdf(tamanho_total_dados, expected_packages, len(received_data), execution_time)
