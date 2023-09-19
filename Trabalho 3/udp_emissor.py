@@ -1,7 +1,7 @@
 import socket
 import hashlib
 
-from env_config import BUFFER, HEADER_SIZE, CHECK_SUM_SIZE, HOST, PORT
+from env_config import BUFFER, HEADER_SIZE, CHECK_SUM_SIZE, HOST, PORT, TCP_PORT, TCP_HOST
 
 BODY_SIZE = BUFFER - HEADER_SIZE - CHECK_SUM_SIZE
 
@@ -69,11 +69,13 @@ def send_message(udp_socket: socket.socket, target_ip: str, target_port: int) ->
 if __name__ == "__main__":
     host = HOST
     target_port = PORT
+    tcp_port = TCP_PORT
+    tcp_host = TCP_HOST
     
     packages = main(host, target_port)
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.bind((host, target_port))
+    client.bind((tcp_host, tcp_port))
     client.listen()
     client, _ = client.accept()
 

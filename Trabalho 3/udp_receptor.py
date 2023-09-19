@@ -4,9 +4,9 @@ import time
 import hashlib
 from fpdf import FPDF
 
-from env_config import BUFFER, HEADER_SIZE, CHECK_SUM_SIZE, HOST, PORT
+from env_config import BUFFER, HEADER_SIZE, CHECK_SUM_SIZE, HOST, PORT, TCP_PORT, TCP_HOST
 
-TIME_OUT = 2
+TIME_OUT = 10
 
 
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -88,13 +88,15 @@ def create_pdf(tamanho_total_dados: int, expected_packages: int, received_data: 
 if __name__ == "__main__":
     host = HOST
     target_port = PORT
+    tcp_port = TCP_PORT
+    tcp_host = TCP_HOST
 
     received_data, tamanho_total_dados, execution_time = main(host, target_port)
 
 
     # RECEBER QUANTIDADE ESPERADA DE PACOTES VIA TCP
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((host, target_port))
+    client.connect((tcp_host, tcp_port))
     expected_packages = int(client.recv(BUFFER).decode('utf-8'))
 
     # Apresentar um relatório na tela e em pdf com:
