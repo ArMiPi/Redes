@@ -2,3 +2,8 @@
 *.pdf
 __pycache__/
 venv/
+Apresentação/
+*.png
+*.svg
+*.drawio
+*.jpg
