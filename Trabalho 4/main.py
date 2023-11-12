@@ -4,7 +4,7 @@ import locale
 import time
 
 from tcp import TCP
-from udp import UDP
+from udp import UDP, TIME_OUT
 
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
@@ -26,8 +26,12 @@ if __name__ == "__main__":
     # Mensagem a ser enviada
     message = create_message()
 
+    # Protocolo e modo utilizados
     protocolo = args[1]
     modo = args[2]
+
+    # Tempo de execução
+    execution_time = 0
 
     # Estabelecer protocolo TCP ou UDP
     conexao = None
@@ -59,10 +63,36 @@ if __name__ == "__main__":
 
             # Receber quantidade de pacotes enviados
             conexao = TCP(modo)
+            execution_time = time.perf_counter()
             tam_pacotes_enviados = int(conexao.client.recv(BUFFER).decode('utf-8'))
+            execution_time = time.perf_counter() - execution_time - TIME_OUT
         case _:
             print("Modo inválido [u/d]")
             exit()
 
-    # TODO Apresentar resultados
+    if modo == "-d":
+        pacotes_enviados = tam_pacotes_enviados / BUFFER
+        pacotes_recebidos = tam_pacotes_recebidos / BUFFER
+        velocidade_bit_seg_upload = tam_pacotes_enviados / execution_time
+        velocidade_pacotes_seg_upload = pacotes_enviados / execution_time
+        velocidade_bit_seg_download = tam_pacotes_recebidos / execution_time
+        velocidade_pacotes_seg_download = pacotes_recebidos / execution_time
+        perda_de_pacotes = pacotes_enviados - pacotes_recebidos
 
+        print(f"""
+            =============================================================
+            Pacotes Enviados: {pacotes_enviados} pacotes
+            Pacotes Recebidos: {pacotes_recebidos} pacotes
+            Perda de Pacotes: {perda_de_pacotes} pacotes perdidos
+            =============================================================
+            Bytes enviados: {tam_pacotes_enviados} bytes
+            Bytes recebidos: {tam_pacotes_recebidos} bytes
+            Perda de Bytes: {tam_pacotes_enviados - tam_pacotes_recebidos} bytes
+            =============================================================
+            Velocidade de upload: 
+                {velocidade_bit_seg_upload} bit/s
+                {velocidade_pacotes_seg_upload} pacotes/s
+            Velocidade de download:
+                {velocidade_bit_seg_download} bit/s
+                {velocidade_pacotes_seg_download} pacotes/s
+        """)
