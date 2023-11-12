@@ -20,6 +20,28 @@ def create_message() -> str:
 
     return string_final
 
+def format_scale(valor: float) -> str:
+    """
+    Retorna o valor fornecido convertido para uma string representando seu valor float
+    com duas casas decimais e "reduzido" para G/M/K caso necessário
+    """
+
+    unidade = ""
+    if valor >= 1_000_000_000:
+        valor /= 1_000_000_000
+        unidade = "G"
+    elif valor >= 1_000_000:
+        valor /= 1_000_000
+        unidade = "M"
+    elif valor >= 1_000:
+        valor /= 1_000
+        unidade = "K"
+    else:
+        pass
+
+    return f"{locale.format_string('%.2f', valor, grouping=True)} {unidade}"
+        
+
 if __name__ == "__main__":
     args = sys.argv
 
@@ -58,14 +80,16 @@ if __name__ == "__main__":
             exit()
         case "-d":
             # Receber pacotes
+            execution_time = time.perf_counter()
             tam_pacotes_recebidos = conexao.recieve_message()
+            execution_time = time.perf_counter() - execution_time
+            if protocolo == "-udp":
+                execution_time -= TIME_OUT
             time.sleep(1)
 
             # Receber quantidade de pacotes enviados
             conexao = TCP(modo)
-            execution_time = time.perf_counter()
             tam_pacotes_enviados = int(conexao.client.recv(BUFFER).decode('utf-8'))
-            execution_time = time.perf_counter() - execution_time - TIME_OUT
         case _:
             print("Modo inválido [u/d]")
             exit()
@@ -73,26 +97,28 @@ if __name__ == "__main__":
     if modo == "-d":
         pacotes_enviados = tam_pacotes_enviados / BUFFER
         pacotes_recebidos = tam_pacotes_recebidos / BUFFER
-        velocidade_bit_seg_upload = tam_pacotes_enviados / execution_time
-        velocidade_pacotes_seg_upload = pacotes_enviados / execution_time
-        velocidade_bit_seg_download = tam_pacotes_recebidos / execution_time
-        velocidade_pacotes_seg_download = pacotes_recebidos / execution_time
         perda_de_pacotes = pacotes_enviados - pacotes_recebidos
+
+        velocidade_bit_seg_upload = tam_pacotes_enviados * 8 / execution_time
+        velocidade_bit_seg_download = tam_pacotes_recebidos * 8 / execution_time
+
+        velocidade_pacotes_seg_upload = pacotes_enviados / execution_time
+        velocidade_pacotes_seg_download = pacotes_recebidos / execution_time
 
         print(f"""
             =============================================================
-            Pacotes Enviados: {pacotes_enviados} pacotes
-            Pacotes Recebidos: {pacotes_recebidos} pacotes
-            Perda de Pacotes: {perda_de_pacotes} pacotes perdidos
+                Pacotes Enviados:  {locale.format_string('%.0f', pacotes_enviados, grouping=True)} pacotes
+                Pacotes Recebidos: {locale.format_string('%.0f', pacotes_recebidos, grouping=True)} pacotes
+                Perda de Pacotes:  {locale.format_string('%.0f', perda_de_pacotes, grouping=True)} pacotes perdidos
             =============================================================
-            Bytes enviados: {tam_pacotes_enviados} bytes
-            Bytes recebidos: {tam_pacotes_recebidos} bytes
-            Perda de Bytes: {tam_pacotes_enviados - tam_pacotes_recebidos} bytes
+                Bytes enviados:  {locale.format_string('%.0f', tam_pacotes_enviados, grouping=True)} bytes
+                Bytes recebidos: {locale.format_string('%.0f', tam_pacotes_recebidos, grouping=True)} bytes
+                Perda de Bytes:  {locale.format_string('%.0f', tam_pacotes_enviados - tam_pacotes_recebidos, grouping=True)} bytes
             =============================================================
-            Velocidade de upload: 
-                {velocidade_bit_seg_upload} bit/s
-                {velocidade_pacotes_seg_upload} pacotes/s
-            Velocidade de download:
-                {velocidade_bit_seg_download} bit/s
-                {velocidade_pacotes_seg_download} pacotes/s
+                Velocidade de upload: 
+                    {format_scale(velocidade_bit_seg_upload)}bit/s
+                    {locale.format_string('%.2f', velocidade_pacotes_seg_upload, grouping=True)} pacotes/s
+                Velocidade de download:
+                    {format_scale(velocidade_bit_seg_download)}bit/s
+                    {locale.format_string('%.2f', velocidade_pacotes_seg_download, grouping=True)} pacotes/s
         """)

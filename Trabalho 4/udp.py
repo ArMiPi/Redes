@@ -1,6 +1,6 @@
 from typing import Literal
 from typing_extensions import Self
-from env_config import BUFFER, TIMER, IP_UPLOAD, PORT
+from env_config import BUFFER, TIMER, IP_DOWNLOAD, PORT
 import socket
 import time
 
@@ -12,7 +12,7 @@ class UDP:
 
         if modo == "-d":
             try:
-                self.client.bind((IP_UPLOAD, PORT))
+                self.client.bind((IP_DOWNLOAD, PORT))
                 self.client.settimeout(TIME_OUT)
             except Exception as e:
                 print(e)
@@ -33,10 +33,10 @@ class UDP:
             try:
                 if time.time() > timeout:
                     raise TimeoutError
-                self.client.sendto(message.encode('utf-8'), (IP_UPLOAD, PORT))
+                self.client.sendto(message.encode('utf-8'), (IP_DOWNLOAD, PORT))
                 pacotes += len(message)
             except TimeoutError as _:
-                print("TIMEOUT :)")
+                print("UDP send_message: TIMEOUT :)")
                 self.client.close()
                 return pacotes
             except Exception as e:
@@ -58,7 +58,7 @@ class UDP:
                 if msg:
                     pacotes += len(msg)
             except socket.timeout:
-                print("TIMEOUT :)")
+                print("UDP recieve_message: TIMEOUT :)")
                 self.client.close()
                 return pacotes
             except Exception as e:

@@ -1,6 +1,6 @@
 from typing import Literal
 from typing_extensions import Self
-from env_config import BUFFER, TIMER, IP_UPLOAD, IP_DOWNLOAD, PORT
+from env_config import BUFFER, TIMER, IP_UPLOAD, PORT
 import socket
 import time
 
@@ -10,7 +10,7 @@ class TCP:
 
         if modo == "-d":
             try:
-                self.client.connect((IP_DOWNLOAD, PORT))
+                self.client.connect((IP_UPLOAD, PORT))
             except Exception as e:
                 print(e)
                 return print("\nNão foi possível conectar ao servidor\n")
@@ -62,6 +62,8 @@ class TCP:
                 msg = self.client.recv(BUFFER).decode('utf-8')
                 if msg:
                     pacotes += len(msg)
+                else:
+                    raise Exception
             except Exception as _:
                 self.client.close()
                 return pacotes
